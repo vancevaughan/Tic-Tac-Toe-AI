@@ -1,3 +1,9 @@
+/*	Square.java
+ *  Creator: Vance Vaughan
+ *  Created: 7 August 2019
+ *  Last Modified: 8 August 2019
+ */
+
 package tictactoe;
 
 public class Square {
@@ -6,7 +12,7 @@ public class Square {
 	private int y;
 	
 	Square() {
-		value = ' ';
+		value = '_';
 		x = 0;
 		y = 0;
 	}
@@ -18,7 +24,11 @@ public class Square {
 	}
 	
 	public boolean isEmpty() {
-		return (value == ' ');
+		if (value == '_') {
+			return true;
+		} else {
+			return false;
+		}
 	}
 	public char getValue() {
 		return value;

@@ -1,3 +1,9 @@
+/*	Board.java
+ *  Creator: Vance Vaughan
+ *  Created: 7 August 2019
+ *  Last Modified: 8 August 2019
+ */
+
 package tictactoe;
 
 import java.util.ArrayList;
@@ -31,7 +37,7 @@ public class Board {
 
 				board.get(i).get(j).setX(j);
 				board.get(i).get(j).setY(i);
-				board.get(i).get(j).setValue(' ');
+				board.get(i).get(j).setValue('_');
 			}
 		}
 
@@ -42,14 +48,13 @@ public class Board {
 		return isNewBoard;
 	}
 
-	// checks to see if there is a 3 in a row
-	/*
+	/* checks to see if the game is over
+	 *
 	 * returns: X: X win 
 	 * 			O: O win 
 	 * 			-: tie 
 	 * 		   \n: game not over
 	 */
-
 	public char gameOver() {
 		if (isNewBoard()) {
 			return '\n';
@@ -70,7 +75,7 @@ public class Board {
 		// check for vertical 3 in a row
 		if (!board.get(0).get(0).isEmpty() && board.get(0).get(0).getValue() == board.get(1).get(0).getValue()
 				&& board.get(1).get(0).getValue() == board.get(2).get(0).getValue()) {
-			return board.get(0).get(1).getValue();
+			return board.get(0).get(0).getValue();
 		} else if (!board.get(0).get(1).isEmpty() && board.get(0).get(1).getValue() == board.get(1).get(1).getValue()
 				&& board.get(1).get(1).getValue() == board.get(2).get(1).getValue()) {
 			return board.get(0).get(1).getValue();
@@ -88,7 +93,7 @@ public class Board {
 			return board.get(2).get(0).getValue();
 		}
 
-		if (this.isFull()) {
+		if (isFull()) {
 			return '-';
 		}
 
@@ -98,7 +103,7 @@ public class Board {
 	public boolean isFull() {
 		for (int i = 0; i < ySize; i++) {
 			for (int j = 0; j < xSize; j++) {
-				if (board.get(i).get(j).getValue() == ' ') {
+				if (isValidMove(j, i)) {
 					return false;
 				}
 			}
@@ -118,7 +123,7 @@ public class Board {
 			return false;
 		}
 
-		if (board.get(y).get(x).isEmpty()) {
+		if (board.get(y).get(x).getValue() == '_') {
 			return true;
 		} else {
 			return false;
@@ -127,47 +132,111 @@ public class Board {
 
 	// returns square with best score
 	public Square AIMove() {
-		int bestI = 0;
-		int bestJ = 0;
-		int bestScore = -10;
-		int moveScore = -10;
+		int bestI = -1;
+		int bestJ = -1;
+		int bestScore = -100;
+		int moveScore = -100;
 		
 		// check score values for all empty spaces
 		for (int i = 0; i < ySize; i++) {
-			for (int j = 0; j < xSize; j++) {
-				if (board.get(i).get(j).getValue() == ' ') {
-					this.place('O', j, i);
+			for (int j = 0; j < xSize; j++) {		
+				if (isValidMove(j, i)) {
+					place('O', j, i);
 					
-					moveScore = minimax();
+					moveScore = minimax(false, 0);
+					
+					this.board.get(i).get(j).setValue('_');
+					
+					if (moveScore == 10) {
+						return new Square('O', j, i);
+					}
 					
 					if (moveScore > bestScore) {
 						bestI = i;
 						bestJ = j;
 						bestScore = moveScore;
 					}
-					
-					this.board.get(i).get(j).setValue(' ');
-					
-					
 				}
 			}
 		}
 
 		// return square with best score
-		return new Square('O', bestI, bestJ);
+		return new Square('O', bestJ, bestI);
 	}
 
-	public int minimax() {
+	public int minimax(boolean isMax, int depth) {
 		int stateScore = evaluate();
 		
-		return 0;
+		// either gone too deep or game is set
+		if (depth == 10) {
+			return stateScore;
+		} 
+		
+		if (stateScore == 10) {
+			return 10 - depth;
+		}
+		
+		if (stateScore == -10) {
+			return -10 + depth;
+		}
+		
+		if (isFull()) {
+			return 0;
+		}
+		
+		if (isMax) {
+			int bestScore = -100;
+			
+			for (int i = 0; i < ySize; i++) {
+				for (int j = 0; j < xSize; j++) {
+					if (isValidMove(j, i)) {
+						place('O', j, i);
+						
+						bestScore = Math.max(bestScore, minimax(!isMax, depth + 1));
+						
+						this.board.get(i).get(j).setValue('_');
+						
+						if (bestScore == 1) {
+							return 1;
+						}						
+					}
+				}
+			}
+			
+			return bestScore;
+		} else {
+			int bestScore = 100;
+			
+			for (int i = 0; i < ySize; i++) {
+				for (int j = 0; j < xSize; j++) {
+					if (isValidMove(j, i)) {
+						place('X', j, i);
+						
+						bestScore = Math.min(bestScore, minimax(!isMax, depth + 1));
+						
+						this.board.get(i).get(j).setValue('_');
+						
+						if (bestScore == -1) {
+							return -1;
+						}
+						
+					}
+				}
+			}
+			
+			return bestScore;
+		}
 	}
 
+	/*	returns:	1: O has won
+	 * 			   -1: X has won
+	 * 				0: game not complete or draw
+	 */
 	public int evaluate() {
-		if (this.gameOver() == 'X') {
-			return 1;
-		} else if (this.gameOver() == 'O') {
-			return -1;
+		if (gameOver() == 'O') {
+			return 10;
+		} else if (gameOver() == 'X') {
+			return -10;
 		} else {
 			return 0;
 		}
